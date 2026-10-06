@@ -73,17 +73,17 @@ def count_conflicts(board):
 
         conflict count = 0
     """
-
-    # TODO:
-    # Compare each queen with every queen
-    # that comes after it.
-    #
-    # Queens conflict when they are:
-    #
-    #   1. in the same row
-    #   2. on the same diagonal
-
-    pass
+    conflicts = 0
+    
+    for i in range(len(board)):
+        for j in range(i + 1, len(board)):
+            same_row = board[i] == board [j]
+            same_diagonal = abs(board[i] - board[j]) == j - i
+            
+            if same_row or same_diagonal:
+                conflicts += 1
+                
+    return conflicts
 
 
 # --------------------------------------------------
@@ -102,11 +102,8 @@ def generate_neighbours(problem, board):
 
     neighbours = []
 
-    # TODO:
-    #
-    # 1. Ask the problem for the available actions.
-    # 2. Apply each action.
-    # 3. Add the resulting state to neighbours.
+    for action in problem.actions(board):
+        neighbours.append(problem.result(board, action))
 
     return neighbours
 
@@ -142,9 +139,14 @@ def hill_climbing(problem, start_board):
 
     current = start_board
 
-    # TODO
-
-    pass
+    while True:
+        neighbours = generate_neighbours(problem, current)
+        best = min(neighbours, key = count_conflicts)
+        
+        if count_conflicts(best) >= count_conflicts(current):
+            return current
+        
+        current = best
 
 
 # --------------------------------------------------
@@ -167,9 +169,18 @@ def simulated_annealing(problem, start_board):
     temperature = 10.0
     cooling_rate = 0.95
 
-    # TODO
+    while temperature > 0.001 and count_conflicts(current) > 0:
+        action = random.choice(problem.actions(current))
+        candidate = problem.result(current, action)
+        
+        delta = count_conflicts(candidate) - count_conflicts(current)
+        
+        if delta < 0 or random.random() < math.exp(-delta / temperature):
+            current = candidate
 
-    pass
+        temperature *= cooling_rate
+        
+    return current
 
 
 # --------------------------------------------------
