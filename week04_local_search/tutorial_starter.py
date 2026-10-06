@@ -49,15 +49,19 @@ class GridProblem(Problem):
         Remember: an action must not move outside the grid.
         """
 
-        # TODO:
-        #
-        # 1. Extract x and y from state.
-        # 2. Create an empty list of actions.
-        # 3. Check which movements are valid.
-        # 4. Add valid actions to the list.
-        # 5. Return the list.
-
-        pass
+        x, y = state
+        actions = []
+        
+        if y > 0:
+            actions.append("UP")
+        if y < GRID_SIZE - 1:
+            actions.append("DOWN")
+        if x > 0:
+            actions.append("LEFT")
+        if x < GRID_SIZE - 1:
+            actions.append("RIGHT")
+            
+        return actions
 
     def result(self, state, action):
         """
@@ -71,13 +75,18 @@ class GridProblem(Problem):
             result = (1, 0)
         """
 
-        # TODO:
-        #
-        # 1. Extract x and y from state.
-        # 2. Check which action was requested.
-        # 3. Return the resulting state.
+        x, y = state
+        
+        if action == "UP":
+            return (x, y - 1)
+        if action == "DOWN":
+            return (x, y + 1)
+        if action == "LEFT": 
+            return (x-1, y)
+        if action == "RIGHT":
+            return (x + 1, y)
 
-        pass
+        return state
 
 
 # --------------------------------------------------
@@ -142,16 +151,16 @@ Be ready to discuss:
 
 3. What is the difference between:
 
-       problem.actions(state)
+    problem.actions(state)
 
-   and:
+and:
 
-       problem.result(state, action)
+    problem.result(state, action)
 
 4. Why doesn't Problem know anything about grids?
 
 5. Why doesn't GridProblem know anything about search?
 
 6. Could the same Problem structure be used for something
-   other than a grid?
+other than a grid?
 """
