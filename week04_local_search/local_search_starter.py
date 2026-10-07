@@ -220,5 +220,9 @@ if __name__ == "__main__":
     )
 
     print(
-        f"{len(neighbours)} neighbours generated"
+        f"{len(neighbours)} neighbours generated\n"
     )
+    
+    for algorithm in (hill_climbing, simulated_annealing):
+        result = algorithm(problem, board)
+        print(algorithm.__name__, result, count_conflicts(result))
