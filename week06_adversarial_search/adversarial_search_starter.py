@@ -30,7 +30,11 @@ print(r"""
        3    5  2    9
 """)
 print("Which values do the two MIN nodes return?")
+print("Answer: The left MIN node returns 3 and the right MIN node returns 2.")
+
 print("Which branch should MAX choose, and why?")
+print("MAX chooses the left branch, because 3 is larger than 2.")
+print("MIN picks the lowest child value (it is the opponent), MAX picks the highest.")
 
 # BOARD — X plays next (three X marks and two O marks).
 # Board positions are numbered 0 to 8, left to right, top to bottom.
@@ -53,9 +57,10 @@ WINNING_LINES = [
 
 def print_board(state):
     """Display the nine cells as a 3-by-3 board."""
-    # TODO: Print three rows of three cells.
-    pass
-
+    for row in range(3):
+        print(" | ".join(state[row * 3 : row * 3 + 3 ]))
+        if row < 2:
+            print("--+---+--")
 
 # --------------------------------------------------
 # TASK 1 — AVAILABLE MOVES
@@ -63,8 +68,7 @@ def print_board(state):
 
 def available_moves(state):
     """Return indices of empty cells (0 through 8)."""
-    # TODO: Find every position containing " ".
-    pass
+    return[i for i, cell in enumerate(state) if cell == " "]
 
 
 # --------------------------------------------------
@@ -76,9 +80,9 @@ def make_move(state, move, player):
 
     Assume move is legal. Do not modify the input board.
     """
-    # TODO: Copy the board and place the player's mark.
-    pass
-
+    new_state = state.copy()
+    new_state[move] = player
+    return new_state
 
 # --------------------------------------------------
 # TASK 2 — WINNER
@@ -86,9 +90,10 @@ def make_move(state, move, player):
 
 def check_winner(state):
     """Return 'X', 'O' or None by checking all winning lines."""
-    # TODO: Check each (a, b, c) in WINNING_LINES.
-    pass
-
+    for a, b, c in WINNING_LINES:
+        if state[a] != " " and state[a] == state[b] == state[c]:
+            return state[a]
+    return None
 
 # --------------------------------------------------
 # TASK 2 — TERMINAL STATE
@@ -96,8 +101,7 @@ def check_winner(state):
 
 def is_terminal(state):
     """Return True for a win or a full board (draw)."""
-    # TODO: Detect a winner OR no remaining empty cells.
-    pass
+    return check_winner(state) is not None or len(available_moves(state)) == 0
 
 
 # --------------------------------------------------
@@ -109,8 +113,13 @@ def utility(state):
 
     Minimax calls this only at terminal states.
     """
-    # TODO: Use check_winner() and return +1, -1 or 0.
-    pass
+    winner = check_winner(state)
+    
+    if winner =="X":
+        return 1
+    if winner == "O":
+        return -1
+    return 0
 
 
 # --------------------------------------------------
@@ -123,14 +132,23 @@ def minimax(state, maximizing, counter):
     maximizing=True means X moves next; False means O moves next.
     counter is a one-item dictionary: {'nodes': 0}.
     """
-    # TODO:
-    # 1. Count this node: counter["nodes"] += 1.
-    # 2. If terminal, return utility(state).
-    # 3. For X (MAX), recursively choose the highest score.
-    # 4. For O (MIN), recursively choose the lowest score.
-    # Use make_move() to avoid changing the original board.
-    pass
-
+    counter["nodes"] += 1
+    
+    if is_terminal(state):
+        return utility(state)
+    
+    if maximizing:
+        best = float("-inf")
+        for move in available_moves(state):
+            score = minimax(make_move(state, move, "X"), False, counter)
+            best = max(best, score)
+        return best
+    else:
+        best = float("inf")
+        for move in available_moves(state):
+            score = minimax(make_move(state, move, "O"), True, counter)
+            best = min(best, score)
+        return best
 
 # --------------------------------------------------
 # TASK 4 AND 5 — BEST MOVE
@@ -141,10 +159,17 @@ def best_move(state, counter):
 
     Count nodes in recursive Minimax searches. Ties use first move.
     """
-    # TODO: Try each legal X move, call minimax() for O's turn,
-    # and return the move with the highest score.
-    # If the board is terminal, return None.
-    pass
+    if is_terminal(state):
+        return None
+    
+    best_score = float("-inf")
+    best = None
+    for move in available_moves(state):
+        score = minimax(make_move(state, move, "X"), False, counter)
+        if score > best_score:
+            best_score = score
+            best = move
+    return best
 
 
 # --------------------------------------------------
@@ -157,12 +182,29 @@ def alpha_beta(state, maximizing, alpha, beta, counter):
     alpha = best score MAX can guarantee so far.
     beta  = best score MIN can guarantee so far.
     """
-    # TODO: Adapt minimax():
-    # - MAX updates alpha; MIN updates beta.
-    # - Stop exploring remaining moves if alpha >= beta.
-    # - Count visited nodes exactly as in minimax().
-    pass
-
+    counter["nodes"] += 1
+    
+    if is_terminal(state):
+        return utility(state)
+    
+    if maximizing:
+        best = float("-inf")
+        for move in available_moves(state):
+            score = alpha_beta(make_move(state, move, "X"), False, alpha, beta, counter)
+            best = max(best, score)
+            alpha = max(alpha, best)
+            if alpha >= beta:
+                break
+        return best
+    else:
+        best = float("inf")
+        for move in available_moves(state):
+            score = alpha_beta(make_move(state, move, "O"), True, alpha, beta, counter)
+            best = min(best, score)
+            beta = min(beta, best)
+            if alpha >= beta:
+                break
+        return best 
 
 # --------------------------------------------------
 # TASK 6 — BEST MOVE WITH ALPHA-BETA
@@ -170,10 +212,20 @@ def alpha_beta(state, maximizing, alpha, beta, counter):
 
 def best_move_alpha_beta(state, counter):
     """Return the best move index for X using Alpha-Beta search."""
-    # TODO: Like best_move(), but call alpha_beta().
-    # Start alpha at -infinity and beta at +infinity.
-    # Update alpha after each candidate X move.
-    pass
+    if is_terminal(state):
+        return None
+    
+    alpha = float("-inf")
+    beta = float("inf")
+    best_score = float("-inf")
+    best = None
+    for move in available_moves(state):
+        score = alpha_beta(make_move(state, move, "X"), False, alpha, beta, counter)
+        if score > best_score:
+            best_score = score
+            best = move
+        alpha = max(alpha, best_score)
+    return best
 
 
 # --------------------------------------------------
@@ -206,6 +258,15 @@ if __name__ == "__main__":
 
     print("\nReflection:")
     print("1. Why is Tic-Tac-Toe a search problem?")
+    print("   Each move leads to new board states, so the game is a tree of states and actions that we search for the best move.")
+
     print("2. Why does Minimax assume an optimal opponent?")
+    print("   Minimax assumes the opponent always picks the move that is worst for us, so the result is the best score we can guarantee.")
+
     print("3. What is the purpose of a utility function?")
+    print("   A utility function converts terminal outcomes (win +1, loss -1, draw 0) into numbers that MAX and MIN can compare.")
+
     print("4. What happens as games become larger?")
+    print("   The game tree grows exponentially, so full search becomes impractical and we need pruning, depth limits and heuristics.")
+
+    
